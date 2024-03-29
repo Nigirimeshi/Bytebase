@@ -2,7 +2,7 @@ root = "."
 tmp_dir = ".air"
 
 [build]
-  bin = "./.air/sql-service --port 8081"
+  bin = "./.air/sql-service --port 10081 --debug"
   cmd = """
   go build \
   -o ./.air/sql-service ./backend/bin/sql-service/main.go"""

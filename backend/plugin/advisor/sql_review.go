@@ -29,6 +29,11 @@ import (
 	storepb "github.com/bytebase/bytebase/proto/generated-go/store"
 )
 
+// 如何添加 SQL 审核规则：
+// 1. 实现一个顾问程序。(plugin/advisor/mysql 或 plugin/advisor/pg)
+// 2. 在 map[storepb.Engine][Adv​​isorType].(plugin/advisor.go) 中注册这个 advisor
+// 3. 如果需要，添加顾问程序错误代码 (plugin/advisor/code.go)。
+// 4. 将 SQLReviewRuleType 映射到 getAdvisorTypeByRule(current file) 中的 Advisor.Type。
 // How to add a SQL review rule:
 //   1. Implement an advisor.(plugin/advisor/mysql or plugin/advisor/pg)
 //   2. Register this advisor in map[storepb.Engine][AdvisorType].(plugin/advisor.go)

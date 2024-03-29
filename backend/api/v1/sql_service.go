@@ -1064,7 +1064,9 @@ func (s *SQLService) postQuery(ctx context.Context, activity *store.ActivityMess
 	return nil
 }
 
+// doQuery 用于执行 SQL 查询，返回查询结果，耗时及任何错误
 func (s *SQLService) doQuery(ctx context.Context, request *v1pb.QueryRequest, instance *store.InstanceMessage, database *store.DatabaseMessage, sensitiveSchemaInfo *base.SensitiveSchemaInfo) ([]*v1pb.QueryResult, int64, error) {
+	// 使用实例的只读数据源获取只读数据库驱动程序
 	driver, err := s.dbFactory.GetReadOnlyDatabaseDriver(ctx, instance, database, request.DataSourceId)
 	if err != nil {
 		return nil, 0, err
@@ -1154,6 +1156,7 @@ func (s *SQLService) preCheck(ctx context.Context, instanceName, connectionDatab
 	}
 
 	if s.profile.DevelopmentIAM {
+		// 检查是否有权限
 		if isAdmin {
 			ok, err := s.iamManager.CheckPermission(ctx, iam.PermissionInstancesAdminExecute, user)
 			if err != nil {
@@ -1163,29 +1166,34 @@ func (s *SQLService) preCheck(ctx context.Context, instanceName, connectionDatab
 				return nil, nil, nil, advisor.Success, nil, nil, status.Errorf(codes.PermissionDenied, "permission denied, require permission %q", iam.PermissionInstancesAdminExecute)
 			}
 		}
+		// 检查环境是否开放查询权限
 		// Check if the environment is open for query privileges.
 		result, err := s.checkWorkspaceIAMPolicy(ctx, environment, isExport)
 		if err != nil {
 			return nil, nil, nil, advisor.Success, nil, nil, err
 		}
 		if !result {
+			// 检查用户是否有执行查询的权限
 			// Check if the user has permission to execute the query.
 			if err := s.checkQueryRights(ctx, connectionDatabase, dataShare, statement, limit, user, instance, isExport); err != nil {
 				return nil, nil, nil, advisor.Success, nil, nil, err
 			}
 		}
 	} else if s.licenseService.IsFeatureEnabled(api.FeatureAccessControl) == nil {
+		// 检查调用者是否为管理员，以便使用管理员模式导出
 		// Check if the caller is admin for exporting with admin mode.
 		if isAdmin && (user.Role != api.WorkspaceAdmin && user.Role != api.WorkspaceDBA) {
 			return nil, nil, nil, advisor.Success, nil, nil, status.Errorf(codes.PermissionDenied, "only workspace owner and DBA can export data using admin mode")
 		}
 
+		// 检查环境是否开放查询权限
 		// Check if the environment is open for query privileges.
 		result, err := s.checkWorkspaceIAMPolicy(ctx, environment, isExport)
 		if err != nil {
 			return nil, nil, nil, advisor.Success, nil, nil, err
 		}
 		if !result {
+			// 检查用户是否有执行查询的权限
 			// Check if the user has permission to execute the query.
 			if err := s.checkQueryRights(ctx, connectionDatabase, dataShare, statement, limit, user, instance, isExport); err != nil {
 				return nil, nil, nil, advisor.Success, nil, nil, err
@@ -1698,20 +1706,24 @@ func getReadOnlyDataSource(instance *store.InstanceMessage) *store.DataSourceMes
 // against the database schema bind to the given database, if the overrideMetadata is provided,
 // it will be used instead of fetching the database schema from the store.
 func (s *SQLService) sqlReviewCheck(ctx context.Context, statement string, environment *store.EnvironmentMessage, instance *store.InstanceMessage, database *store.DatabaseMessage, overrideMetadata *storepb.DatabaseSchemaMetadata) (advisor.Status, []*v1pb.Advice, error) {
+	// 检查数据库引擎是否支持
 	if !IsSQLReviewSupported(instance.Engine) || database == nil {
 		return advisor.Success, nil, nil
 	}
 
 	dbMetadata := overrideMetadata
+	// 如果没有提供覆盖的元数据，那么从数据库中获取元数据
 	if dbMetadata == nil {
 		dbSchema, err := s.store.GetDBSchema(ctx, database.UID)
 		if err != nil {
 			return advisor.Error, nil, status.Errorf(codes.Internal, "failed to fetch database schema: %v", err)
 		}
+		// schema 为空时，立即同步 schema
 		if dbSchema == nil {
 			if err := s.schemaSyncer.SyncDatabaseSchema(ctx, database, true /* force */); err != nil {
 				return advisor.Error, nil, status.Errorf(codes.Internal, "failed to sync database schema: %v", err)
 			}
+			// 重新从数据库获取 schema
 			dbSchema, err = s.store.GetDBSchema(ctx, database.UID)
 			if err != nil {
 				return advisor.Error, nil, status.Errorf(codes.Internal, "failed to fetch database schema: %v", err)
@@ -1723,6 +1735,7 @@ func (s *SQLService) sqlReviewCheck(ctx context.Context, statement string, envir
 		dbMetadata = dbSchema.GetMetadata()
 	}
 
+	// 根据元数据创建一个数据库 catalog
 	catalog, err := s.store.NewCatalog(ctx, database.UID, instance.Engine, store.IgnoreDatabaseAndTableCaseSensitive(instance), overrideMetadata, advisor.SyntaxModeNormal)
 	if err != nil {
 		return advisor.Error, nil, status.Errorf(codes.Internal, "Failed to create a catalog: %v", err)
@@ -1804,6 +1817,7 @@ func (s *SQLService) sqlCheck(
 	currentDatabase string,
 ) (advisor.Status, []advisor.Advice, error) {
 	var adviceList []advisor.Advice
+	// ! 获取目标环境的审核策略
 	policy, err := s.store.GetSQLReviewPolicy(ctx, environmentID)
 	if err != nil {
 		if e, ok := err.(*common.Error); ok && e.Code == common.NotFound {
@@ -1845,6 +1859,7 @@ func (s *SQLService) sqlCheck(
 	return adviceLevel, adviceList, nil
 }
 
+// prepareRelatedMessage 获取用户、环境、实例、数据库
 func (s *SQLService) prepareRelatedMessage(ctx context.Context, instanceToken string, databaseName string) (*store.UserMessage, *store.EnvironmentMessage, *store.InstanceMessage, *store.DatabaseMessage, error) {
 	user, err := s.getUser(ctx)
 	if err != nil {
@@ -1887,6 +1902,11 @@ func (s *SQLService) prepareRelatedMessage(ctx context.Context, instanceToken st
 	return user, environment, instance, database, nil
 }
 
+// validateQueryRequest 验证查询请求。
+// 1. 检查实例是否存在。
+// 2. 检查实例是为 postgres 时，connection_database 是否为空。
+// 3. 解析 Postgres、MySQL、TiDB、Oracle 语句。
+// 4. 检查是否所有语句都是 SELECT/EXPLAIN/SET 语句。
 // validateQueryRequest validates the query request.
 // 1. Check if the instance exists.
 // 2. Check connection_database if the instance is postgres.

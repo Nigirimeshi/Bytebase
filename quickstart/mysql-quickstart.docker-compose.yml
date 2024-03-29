@@ -19,6 +19,6 @@ services:
     environment:
       - MYSQL_ALLOW_EMPTY_PASSWORD=yes
     ports:
-      - 3306:3306
+      - 13306:3306
     volumes:
       - ./test_schema/mysql:/docker-entrypoint-initdb.d
