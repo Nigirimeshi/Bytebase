@@ -1,43 +1,51 @@
 {
   "lockfile_version": "1",
   "packages": {
-    "go@latest": {
-      "last_modified": "2024-01-27T14:55:31Z",
-      "resolved": "github:NixOS/nixpkgs/160b762eda6d139ac10ae081f8f78d640dd523eb#go",
-      "source": "devbox-search",
-      "version": "1.21.6",
-      "systems": {
-        "aarch64-darwin": {
-          "store_path": "/nix/store/8m3wjb23sfbjpjsj4l82b4zh9xnw62hh-go-1.21.6"
-        },
-        "aarch64-linux": {
-          "store_path": "/nix/store/ia1z2slwgdgibad4z42rpd1dib7gk999-go-1.21.6"
-        },
-        "x86_64-darwin": {
-          "store_path": "/nix/store/dm4s4dfrah5zhl6larnrbh07v76j4pgy-go-1.21.6"
-        },
-        "x86_64-linux": {
-          "store_path": "/nix/store/cw9dqybf9w6wp7827h23pb3ym8gs8h47-go-1.21.6"
-        }
-      }
-    },
     "nodePackages.pnpm@latest": {
-      "last_modified": "2024-01-23T02:13:08Z",
-      "resolved": "github:NixOS/nixpkgs/4d3d04cfd372a0511f12b885c9822e406b00fe8e#nodePackages.pnpm",
+      "last_modified": "2024-03-22T11:26:23Z",
+      "resolved": "github:NixOS/nixpkgs/a3ed7406349a9335cb4c2a71369b697cecd9d351#nodePackages.pnpm",
       "source": "devbox-search",
-      "version": "8.14.0",
+      "version": "8.15.5",
       "systems": {
         "aarch64-darwin": {
-          "store_path": "/nix/store/rw37gcc3m93kh2hq3pi8891g41p54518-pnpm-8.14.0"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/i7k6jpvfh4n0syvrrpjsqb1brw792wn8-pnpm-8.15.5",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/i7k6jpvfh4n0syvrrpjsqb1brw792wn8-pnpm-8.15.5"
         },
         "aarch64-linux": {
-          "store_path": "/nix/store/ab961l4fcs1n5ldfy4463kqr4pln1cxc-pnpm-8.14.0"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/d1645fw8fvghb8pm07a771600yh41rcf-pnpm-8.15.5",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/d1645fw8fvghb8pm07a771600yh41rcf-pnpm-8.15.5"
         },
         "x86_64-darwin": {
-          "store_path": "/nix/store/06qmz8k1gi9s68mcynlyis35w2pj6fl6-pnpm-8.14.0"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/q35967zhybhxsnj0yswz6fc8a319w7rf-pnpm-8.15.5",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/q35967zhybhxsnj0yswz6fc8a319w7rf-pnpm-8.15.5"
         },
         "x86_64-linux": {
-          "store_path": "/nix/store/pgzxiapcydn1mmqh1w4jkl9pcw7ybbj4-pnpm-8.14.0"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/6l54nqk9ljnr0zhbm8kzdx051whwabcq-pnpm-8.15.5",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/6l54nqk9ljnr0zhbm8kzdx051whwabcq-pnpm-8.15.5"
         }
       }
     }

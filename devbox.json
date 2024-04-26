@@ -1,6 +1,5 @@
 {
   "packages": [
-    "go@latest",
     "nodePackages.pnpm@latest"
   ],
   "shell": {
